@@ -24,7 +24,7 @@
     "test": "testem",
     "compile": "npm run compile-es && npm run compile-commonjs",
     "compile-es": "tsc --outDir es --module es6 --moduleResolution node",
-    "compile-commonjs": "tsc --outDir ./",
+    "compile-commonjs": "tsc --outDir ./build",
     "prepublish": "npm run compile"
   },
   "repository": {
