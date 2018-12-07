@@ -3,7 +3,26 @@ sprang-angular-decorators
 
 Angular decorators for angular 1 inspired by [ng-forward](https://github.com/ngUpgraders/ng-forward) and java/spring annotations
 
-# @Autowired
+## Bootstrap
+
+```typescript
+import { setModule, startAutowiring } from 'sprang-angular-decorators';
+
+let dependencies = [
+    'ngMessages',
+    'ngAnimate'
+];
+
+setModule(angular.module('App', dependencies)
+    .run(['$injector', ($injector: ng.auto.IInjectorService) => {
+        startAutowiring($injector);
+    }])
+);
+
+angular.bootstrap(document.documentElement, ['App'], { strictDi: true });
+```
+
+## @Autowired
 
 Auto injection of services
 
@@ -27,7 +46,7 @@ Notes:
   - Custom angular services (decorated with @Service) are injected via a function returning corresponding class
 
 
-# @Service
+## @Service
 
 Registers an angular service
 
@@ -37,7 +56,7 @@ export class MyService {}
 ```
 
 
-# @Component
+## @Component
 
 Registers an angular component
 
@@ -71,7 +90,7 @@ class MyComponent implements ng.ComponentLifeCycle {
 ```
 ***Warning !!! $ctrl shall be used in templates => {{$ctrl.x}}*** 
 
-# @Controller
+## @Controller
 
 Registers an angular controller
 
@@ -80,7 +99,7 @@ Registers an angular controller
 export class MyController {}
 ```
 
-# @NgElement
+## @NgElement
 
 Auto injects components HTMLElement 
 
@@ -94,7 +113,7 @@ export class MyComponentOnly {
 }
 ```
 
-# @NgAttrs
+## @NgAttrs
 
 Auto injects component attributes (Input or BindString shall be prefered)
 
@@ -108,7 +127,7 @@ export class MyComponentOnly {
 }
 ```
 
-# @NgScope
+## @NgScope
 
 Auto injects angular scope
 
@@ -122,7 +141,7 @@ export class MyComponentOrController {
 }
 ```
 
-# @Input
+## @Input
 
 ```typescript
 @Component(...)
@@ -146,7 +165,7 @@ Any modification of scopeVarA and scopeVarB values will be reported respectively
 
 Modification can be watch via $onChanges lifecycle method
 
-# @Output
+## @Output
 
 ```typescript
 @Component(...)
@@ -177,7 +196,7 @@ scope.handlerb=(ev)=>{console.log(ev)} // -> {name:'doe'}
 
 ***Note: all native events are also available click, mouseover... with (...)="" syntax. e.g: (click)="clickHandler($event)"***
 
-# @BindString
+## @BindString
 
 ```typescript
 @Component(...)
@@ -196,7 +215,7 @@ Will set
 stringA with "john" 
 stringB with "doe" 
 
-# @Require
+## @Require
 
 ```typescript
 @Component(...)
@@ -209,7 +228,7 @@ class X {
 <elt ng-model="scopeVar"></elt>
 ```
 
-# @Filter
+## @Filter
 
 ```typescript
 @Filter('filterName')
@@ -220,7 +239,7 @@ class X {
 }
 ```
 
-# @SnabbComponent
+## @SnabbComponent
 
 ```typescript
 @SnabbComponent
@@ -236,7 +255,7 @@ export class SComponentName extends SnabbdomComponent<Props> {
 }
 ```
 
-# @NgEventBus
+## @NgEventBus
 
 Annotate class that implements event bus
 
@@ -247,7 +266,7 @@ export class MyBus {
 }
 ```
 
-# @ListenBus()
+## @ListenBus()
 
 ```typescript
 export class MyComponent {
