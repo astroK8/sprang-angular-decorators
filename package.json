@@ -27,12 +27,18 @@
     "compile-commonjs": "tsc --outDir ./",
     "prepublish": "npm run compile"
   },
-  "repository": {},
-  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/astroK8/sprang-angular-decorators.git"
+  },
+  "keywords": [
+    "angular",
+    "decorators"
+  ],
   "author": "Aymeric Trotignon",
   "license": "MIT",
   "bugs": {
-    "url": "http://"
+    "url": "https://github.com/astroK8/sprang-angular-decorators/issues"
   },
-  "homepage": ""
+  "homepage": "https://github.com/astroK8/sprang-angular-decorators#readme"
 }
