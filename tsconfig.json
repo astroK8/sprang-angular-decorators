@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "target": "ES5",
+        "noImplicitAny": true,
+        "sourceMap": true,
+        "strictNullChecks": true,
+        "declaration": true,
+        "removeComments": false,
+        "noUnusedLocals": true,
+        "moduleResolution": "node",
+        "emitDecoratorMetadata": false,
+        "experimentalDecorators": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "noUnusedParameters": true,
+        "skipLibCheck": false
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

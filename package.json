@@ -1,0 +1,38 @@
+{
+  "name": "sprang-angular-decorators",
+  "version": "0.0.1",
+  "description": "Decorators for angular 1",
+  "main": "build/sprang-angular-decorators.js",
+  "module": "es/sprang-angular-decorators.js",
+  "typings": "sprang-angular-decorators.d.ts",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "dependencies": {
+    "lodash": "^4.17.11",
+    "es6-shim": "^0.35.4"
+  },
+  "devDependencies": {
+    "typescript": "^3.1.6",
+    "@types/lodash": "^4.14.118",
+    "@types/angular": "^1.6.51",
+    "@types/es6-shim": "^0.31.39"
+  },
+  "scripts": {
+    "pretest": "npm run compile",
+    "test": "testem",
+    "compile": "npm run compile-es && npm run compile-commonjs",
+    "compile-es": "tsc --outDir es --module es6 --moduleResolution node",
+    "compile-commonjs": "tsc --outDir ./",
+    "prepublish": "npm run compile"
+  },
+  "repository": {},
+  "keywords": [],
+  "author": "Aymeric Trotignon",
+  "license": "MIT",
+  "bugs": {
+    "url": "http://"
+  },
+  "homepage": ""
+}
