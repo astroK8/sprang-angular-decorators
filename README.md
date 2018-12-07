@@ -37,7 +37,7 @@ export class X {
     @Autowired('$timeout')
   	private $timeout: ng.ITimeoutService;
 
-    constructor(private dependency1, private dependency2) {}  
+    constructor() {}  
 }
 ```
 
