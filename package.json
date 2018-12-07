@@ -4,7 +4,7 @@
   "description": "Decorators for angular 1",
   "main": "build/sprang-angular-decorators.js",
   "module": "es/sprang-angular-decorators.js",
-  "typings": "sprang-angular-decorators.d.ts",
+  "typings": "build/sprang-angular-decorators.d.ts",
   "directories": {
     "example": "examples",
     "test": "test"
