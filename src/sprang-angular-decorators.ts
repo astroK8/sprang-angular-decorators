@@ -60,6 +60,14 @@ export function setModule(mod: ng.IModule) {
 
 }
 
+export function getInjectableName(target:any):string {
+    try {
+        return target.__sprang_getInjectableName();
+    } catch(e) {
+        throw('Fail to get injectableName');
+    }
+}
+
 function register(registrationItem: RegistrationItem) {
     if (!angularModule) {
         console.debug('Delayed angular registering [' + registrationItem.type + '] : ' + registrationItem.name);
@@ -376,7 +384,7 @@ export function NgEventBus(serviceConstructor: any): void {
     serviceConstructor.prototype[IS_EVENT_BUS] = true;
 }
 
-function addBusListenersToComponent<T,U,V>(classConstructor: any): any {
+function addBusListenersToComponent<T, U, V>(classConstructor: any): any {
     let overridedConstructor = classConstructor;
     let listenBusItems: ListenItem<T>[] = classConstructor.prototype[LISTENBUS_ARRAY_KEY] || [];
 
@@ -384,7 +392,7 @@ function addBusListenersToComponent<T,U,V>(classConstructor: any): any {
         console.debug('___________________________');
         console.debug('Add bus listeners of component', classConstructor.name);
         console.debug('___________________________');
-        let sprangEventBus: EventBusListenerManagerProvider<U,V> = $injector.get(eventBusInjectName);
+        let sprangEventBus: EventBusListenerManagerProvider<U, V> = $injector.get(eventBusInjectName);
         let listenBusManager = sprangEventBus.getEventBusListenerManager();
 
         listenBusItems.forEach((listenBusItem: ListenItem<T>) => {
@@ -461,13 +469,13 @@ function autowireComponent(classConstructor: any): any {
     return overridedConstructor;
 }
 
-function autowireController(classConstructor: any, name:string): any {
+function autowireController(classConstructor: any, name: string): any {
     let overridedConstructor = classConstructor;
     let autowiringArray: InjectItem[] = classConstructor.prototype[AUTOWIRING_ARRAY_KEY] || [];
     // Ask Angular to inject $element and $scope into component constructor
     overridedConstructor.$inject = ['$scope'];
 
-    overridedConstructor.__sprang_getInjectableName = ()=> {
+    overridedConstructor.__sprang_getInjectableName = () => {
         return name;
     }
 
@@ -486,18 +494,18 @@ function autowireController(classConstructor: any, name:string): any {
             this[injection.propertyName] = $injector.get(injectionName);
         })
 
-        let scope:any = args[0];
+        let scope: any = args[0];
 
         // Controller added in scope as $ctrl
-        scope.$ctrl=this;
+        scope.$ctrl = this;
 
         // Calls controller $onDestroy when scope destroyed 
         scope.$on('$destroy', () => {
-            if(this.$onDestroy) {
+            if (this.$onDestroy) {
                 this.$onDestroy();
             }
         });
-        
+
     })
 
     return overridedConstructor;

@@ -1,7 +1,7 @@
 {
   "name": "sprang-angular-decorators",
   "version": "0.0.1",
-  "description": "Decorators for angular 1",
+  "description": "Spring like decorators for angular 1",
   "main": "build/sprang-angular-decorators.js",
   "module": "es/sprang-angular-decorators.js",
   "typings": "build/sprang-angular-decorators.d.ts",
@@ -25,7 +25,10 @@
     "compile": "npm run compile-es && npm run compile-commonjs",
     "compile-es": "tsc --outDir es --module es6 --moduleResolution node",
     "compile-commonjs": "tsc --outDir ./build",
-    "prepublish": "npm run compile"
+    "prepublish": "npm run compile",
+    "release-major": "xyz --repo git@github.com:astroK8/sprang-angular-decorators.git --increment major",
+    "release-minor": "xyz --repo git@github.com:astroK8/sprang-angular-decorators.git --increment minor",
+    "release-patch": "xyz --repo git@github.com:astroK8/sprang-angular-decorators.git --increment patch"
   },
   "repository": {
     "type": "git",
