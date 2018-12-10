@@ -1,7 +1,8 @@
 import { uniqueId, merge, isFunction, isArray, isString } from 'lodash';
-import { addEvent, resolveEvents, buildEventSelector, EventEmitter } from './output-events';
+import { addEvent, resolveEvents, buildEventSelector, EventEmitter } from './output-event';
 import parseSelector from './parse-selector';
 import { Autobind, DecoratorUtils } from './../decorators/decorators';
+import { EventBusListenerManagerProvider } from './EventBusListenerManagerProvider';
 
 const BINDINGS_KEY: string = '__sprang_bindingsKey';
 const REQUIRES_KEY: string = '__sprang_requiresKey';
@@ -375,7 +376,7 @@ export function NgEventBus(serviceConstructor: any): void {
     serviceConstructor.prototype[IS_EVENT_BUS] = true;
 }
 
-function addBusListenersToComponent<T>(classConstructor: any): any {
+function addBusListenersToComponent<T,U,V>(classConstructor: any): any {
     let overridedConstructor = classConstructor;
     let listenBusItems: ListenItem<T>[] = classConstructor.prototype[LISTENBUS_ARRAY_KEY] || [];
 
@@ -383,7 +384,7 @@ function addBusListenersToComponent<T>(classConstructor: any): any {
         console.debug('___________________________');
         console.debug('Add bus listeners of component', classConstructor.name);
         console.debug('___________________________');
-        let sprangEventBus: any = $injector.get(eventBusInjectName);
+        let sprangEventBus: EventBusListenerManagerProvider<U,V> = $injector.get(eventBusInjectName);
         let listenBusManager = sprangEventBus.getEventBusListenerManager();
 
         listenBusItems.forEach((listenBusItem: ListenItem<T>) => {
