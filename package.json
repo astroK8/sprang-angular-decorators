@@ -1,6 +1,6 @@
 {
   "name": "sprang-angular-decorators",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Spring like decorators for angular 1",
   "main": "build/sprang-angular-decorators.js",
   "module": "es/sprang-angular-decorators.js",
