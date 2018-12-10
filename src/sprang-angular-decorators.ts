@@ -1,15 +1,17 @@
 import { uniqueId, merge, isFunction, isArray, isString } from 'lodash';
 import { addEvent, resolveEvents, buildEventSelector, EventEmitter } from './output-events';
 import parseSelector from './parse-selector';
-import { Autobind, DecoratorUtils } from './decorators/decorators';
+import { Autobind, DecoratorUtils } from './../decorators/decorators';
 
-const BINDINGS_KEY: string = '__nms_bindingsKey';
-const REQUIRES_KEY: string = '__nms_requiresKey';
-const INJECTION_NAME_KEY: string = '__nms_injectName';
-const AUTOWIRING_ARRAY_KEY: string = '__nms_inject_array';
-const COMPONENT_SCOPE: string = '__nms_component_scope';
-const COMPONENT_ELEMENT: string = '__nms_component_element';
-const COMPONENT_ATTRS = '__nms_component_attrs';
+const BINDINGS_KEY: string = '__sprang_bindingsKey';
+const REQUIRES_KEY: string = '__sprang_requiresKey';
+const INJECTION_NAME_KEY: string = '__sprang_injectName';
+const AUTOWIRING_ARRAY_KEY: string = '__sprang_inject_array';
+const COMPONENT_SCOPE: string = '__sprang_component_scope';
+const COMPONENT_ELEMENT: string = '__sprang_component_element';
+const COMPONENT_ATTRS = '__sprang_component_attrs';
+const LISTENBUS_ARRAY_KEY: string = '__sprang_listenbus_array';
+const IS_EVENT_BUS: string = '__sprang_event_bus';
 
 type RegistrationType = 'Service' | 'Component' | 'Filter' | 'Attribute' | 'Controller';
 
@@ -33,10 +35,16 @@ interface InjectItem {
     dependency: Injected;
 }
 
+interface ListenItem<T> {
+    propertyName: string;
+    getEvents: () => T | T[]
+}
+
 let angularModule: ng.IModule;
 let registrationQueue: RegistrationItem[] = [];
 let $injector: ng.auto.IInjectorService;
 let _injectables = new Set() as Set<string>;
+let eventBusInjectName: string;
 
 // Set main angular module to use for registration
 export function setModule(mod: ng.IModule) {
@@ -80,6 +88,7 @@ export function Component(options: ComponentOptions) {
         case 'E':
             decoratorFactory = (classConstructor: any): void => {
                 let overridedConstructor = autowireComponent(classConstructor);
+                overridedConstructor = addBusListenersToComponent(overridedConstructor);
                 let registrationItem: RegistrationItem = {
                     registerFunc: (mod: ng.IModule) => {
                         let definition = options;
@@ -113,6 +122,7 @@ export function Component(options: ComponentOptions) {
         case 'A':
             decoratorFactory = (classConstructor: any): void => {
                 let overridedConstructor = autowireComponent(classConstructor);
+                overridedConstructor = addBusListenersToComponent(overridedConstructor);
                 let registrationItem: RegistrationItem = {
                     registerFunc: (mod: ng.IModule) => {
 
@@ -209,6 +219,10 @@ export function Service() {
     return function decoratorFactory(serviceConstructor: any): void {
 
         let uniqName = addUniqInjectableNameToConstructor(serviceConstructor);
+
+        if (serviceConstructor.prototype[IS_EVENT_BUS]) {
+            eventBusInjectName = uniqName;
+        }
 
         let registrationItem: RegistrationItem = {
             registerFunc: (mod: ng.IModule) => {
@@ -333,6 +347,62 @@ export function NgAttrs(classPrototype: any, decoratedPropertyName: string): voi
     classPrototype[COMPONENT_ATTRS] = decoratedPropertyName;
 }
 
+/**
+ * @ListenBus(()=>Event or Event[])
+ * 
+ */
+export function ListenBus<T>(getEvents: () => T | T[]) {
+    return function (classPrototype: any, decoratedPropertyName: string) {
+        let listenBusItems: ListenItem<T>[];
+        listenBusItems = classPrototype[LISTENBUS_ARRAY_KEY];
+        if (!listenBusItems) {
+            listenBusItems = [];
+        }
+        listenBusItems.push({
+            propertyName: decoratedPropertyName,
+            getEvents: getEvents
+        })
+        classPrototype[LISTENBUS_ARRAY_KEY] = listenBusItems;
+    }
+}
+
+/**
+ * @NgEventBus
+ * 
+ * Annotate event bus class
+ */
+export function NgEventBus(serviceConstructor: any): void {
+    serviceConstructor.prototype[IS_EVENT_BUS] = true;
+}
+
+function addBusListenersToComponent<T>(classConstructor: any): any {
+    let overridedConstructor = classConstructor;
+    let listenBusItems: ListenItem<T>[] = classConstructor.prototype[LISTENBUS_ARRAY_KEY] || [];
+
+    overridedConstructor = DecoratorUtils.overrideConstructor(classConstructor, function (..._args: any[]) {
+        console.debug('___________________________');
+        console.debug('Add bus listeners of component', classConstructor.name);
+        console.debug('___________________________');
+        let sprangEventBus: any = $injector.get(eventBusInjectName);
+        let listenBusManager = sprangEventBus.getEventBusListenerManager();
+
+        listenBusItems.forEach((listenBusItem: ListenItem<T>) => {
+            let events = listenBusItem.getEvents();
+            listenBusManager.addEventListener(<any>events, (...args: any[]) => {
+                this[listenBusItem.propertyName].apply(this, args);
+            })
+            let original$onDestroy = this['$onDestroy'];
+            this['$onDestroy'] = () => {
+                original$onDestroy.apply(this);
+                listenBusManager.unsubscribeAll()
+            }
+        })
+    })
+
+    return overridedConstructor;
+}
+
+
 function autowireService(classConstructor: any): any {
     let overridedConstructor = classConstructor;
     let autowiringArray: InjectItem[] = classConstructor.prototype[AUTOWIRING_ARRAY_KEY];
@@ -346,7 +416,7 @@ function autowireService(classConstructor: any): any {
                 if (isString(injection.dependency)) {
                     injectionName = injection.dependency;
                 } else {
-                    injectionName = (<any>injection.dependency)().__nms_getInjectableName();
+                    injectionName = (<any>injection.dependency)().__sprang_getInjectableName();
                 }
                 console.debug(injection.propertyName + ' <- ' + injectionName);
                 this[injection.propertyName] = $injector.get(injectionName);
@@ -371,7 +441,7 @@ function autowireComponent(classConstructor: any): any {
             if (isString(injection.dependency)) {
                 injectionName = injection.dependency;
             } else {
-                injectionName = (<any>injection.dependency)().__nms_getInjectableName();
+                injectionName = (<any>injection.dependency)().__sprang_getInjectableName();
             }
             console.debug(injection.propertyName + ' <- ' + injectionName);
             this[injection.propertyName] = $injector.get(injectionName);
@@ -390,13 +460,13 @@ function autowireComponent(classConstructor: any): any {
     return overridedConstructor;
 }
 
-function autowireController(classConstructor: any, name: string): any {
+function autowireController(classConstructor: any, name:string): any {
     let overridedConstructor = classConstructor;
     let autowiringArray: InjectItem[] = classConstructor.prototype[AUTOWIRING_ARRAY_KEY] || [];
     // Ask Angular to inject $element and $scope into component constructor
     overridedConstructor.$inject = ['$scope'];
 
-    overridedConstructor.__nms_getInjectableName = () => {
+    overridedConstructor.__sprang_getInjectableName = ()=> {
         return name;
     }
 
@@ -409,24 +479,24 @@ function autowireController(classConstructor: any, name: string): any {
             if (isString(injection.dependency)) {
                 injectionName = injection.dependency;
             } else {
-                injectionName = (<any>injection.dependency)().__nms_getInjectableName();
+                injectionName = (<any>injection.dependency)().__sprang_getInjectableName();
             }
             console.debug(injection.propertyName + ' <- ' + injectionName);
             this[injection.propertyName] = $injector.get(injectionName);
         })
 
-        let scope: any = args[0];
+        let scope:any = args[0];
 
         // Controller added in scope as $ctrl
-        scope.$ctrl = this;
+        scope.$ctrl=this;
 
         // Calls controller $onDestroy when scope destroyed 
         scope.$on('$destroy', () => {
-            if (this.$onDestroy) {
+            if(this.$onDestroy) {
                 this.$onDestroy();
             }
         });
-
+        
     })
 
     return overridedConstructor;
@@ -444,7 +514,7 @@ function addUniqInjectableNameToConstructor(classConstructor: any): string {
     let uniqName = _injectables.has(targetName) ? buildUniqName(targetName) : targetName;
 
     classConstructor[INJECTION_NAME_KEY] = uniqName;
-    classConstructor.__nms_getInjectableName = () => {
+    classConstructor.__sprang_getInjectableName = () => {
         return uniqName;
     };
     _injectables.add(uniqName);
