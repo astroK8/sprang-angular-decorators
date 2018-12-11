@@ -1,11 +1,12 @@
 /// <reference types="angular" />
-import { EventEmitter } from './output-events';
+import { EventEmitter } from './output-event';
 declare type InjectFunc = () => Function;
 declare type Injected = string | InjectFunc;
 interface ComponentOptions extends ng.IComponentOptions {
     selector: string;
 }
 export declare function setModule(mod: ng.IModule): void;
+export declare function getInjectableName(target: any): string;
 export { EventEmitter };
 /**
  * @Component(options:ComponentOptions)
@@ -59,4 +60,15 @@ export declare function NgElement(classPrototype: any, decoratedPropertyName: st
  * @NgAttrs
  */
 export declare function NgAttrs(classPrototype: any, decoratedPropertyName: string): void;
+/**
+ * @ListenBus(()=>Event or Event[])
+ *
+ */
+export declare function ListenBus<T>(getEvents: () => T | T[]): (classPrototype: any, decoratedPropertyName: string) => void;
+/**
+ * @NgEventBus
+ *
+ * Annotate event bus class
+ */
+export declare function NgEventBus(serviceConstructor: any): void;
 export declare function startAutowiring(injector: ng.auto.IInjectorService): void;

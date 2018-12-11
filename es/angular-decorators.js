@@ -1,19 +1,22 @@
 import { uniqueId, merge, isFunction, isArray, isString } from 'lodash';
-import { addEvent, resolveEvents, buildEventSelector, EventEmitter } from './output-events';
+import { addEvent, resolveEvents, buildEventSelector, EventEmitter } from './output-event';
 import parseSelector from './parse-selector';
 import { Autobind, DecoratorUtils } from './decorators/decorators';
-var BINDINGS_KEY = '__nms_bindingsKey';
-var REQUIRES_KEY = '__nms_requiresKey';
-var INJECTION_NAME_KEY = '__nms_injectName';
-var AUTOWIRING_ARRAY_KEY = '__nms_inject_array';
-var COMPONENT_SCOPE = '__nms_component_scope';
-var COMPONENT_ELEMENT = '__nms_component_element';
-var COMPONENT_ATTRS = '__nms_component_attrs';
+var BINDINGS_KEY = '__sprang_bindingsKey';
+var REQUIRES_KEY = '__sprang_requiresKey';
+var INJECTION_NAME_KEY = '__sprang_injectName';
+var AUTOWIRING_ARRAY_KEY = '__sprang_inject_array';
+var COMPONENT_SCOPE = '__sprang_component_scope';
+var COMPONENT_ELEMENT = '__sprang_component_element';
+var COMPONENT_ATTRS = '__sprang_component_attrs';
+var LISTENBUS_ARRAY_KEY = '__sprang_listenbus_array';
+var IS_EVENT_BUS = '__sprang_event_bus';
 ;
 var angularModule;
 var registrationQueue = [];
 var $injector;
 var _injectables = new Set();
+var eventBusInjectName;
 // Set main angular module to use for registration
 export function setModule(mod) {
     angularModule = mod;
@@ -23,6 +26,14 @@ export function setModule(mod) {
     }
     registrationQueue = [];
     resolveEvents();
+}
+export function getInjectableName(target) {
+    try {
+        return target.__sprang_getInjectableName();
+    }
+    catch (e) {
+        throw ('Fail to get injectableName');
+    }
 }
 function register(registrationItem) {
     if (!angularModule) {
@@ -48,6 +59,7 @@ export function Component(options) {
         case 'E':
             decoratorFactory = function (classConstructor) {
                 var overridedConstructor = autowireComponent(classConstructor);
+                overridedConstructor = addBusListenersToComponent(overridedConstructor);
                 var registrationItem = {
                     registerFunc: function (mod) {
                         var definition = options;
@@ -72,6 +84,7 @@ export function Component(options) {
         case 'A':
             decoratorFactory = function (classConstructor) {
                 var overridedConstructor = autowireComponent(classConstructor);
+                overridedConstructor = addBusListenersToComponent(overridedConstructor);
                 var registrationItem = {
                     registerFunc: function (mod) {
                         var definition = merge(options, {
@@ -148,6 +161,9 @@ export function Filter(name) {
 export function Service() {
     return function decoratorFactory(serviceConstructor) {
         var uniqName = addUniqInjectableNameToConstructor(serviceConstructor);
+        if (serviceConstructor.prototype[IS_EVENT_BUS]) {
+            eventBusInjectName = uniqName;
+        }
         var registrationItem = {
             registerFunc: function (mod) {
                 mod.service(uniqName, autowireService(serviceConstructor));
@@ -252,6 +268,64 @@ export function NgElement(classPrototype, decoratedPropertyName) {
 export function NgAttrs(classPrototype, decoratedPropertyName) {
     classPrototype[COMPONENT_ATTRS] = decoratedPropertyName;
 }
+/**
+ * @ListenBus(()=>Event or Event[])
+ *
+ */
+export function ListenBus(getEvents) {
+    return function (classPrototype, decoratedPropertyName) {
+        var listenBusItems;
+        listenBusItems = classPrototype[LISTENBUS_ARRAY_KEY];
+        if (!listenBusItems) {
+            listenBusItems = [];
+        }
+        listenBusItems.push({
+            propertyName: decoratedPropertyName,
+            getEvents: getEvents
+        });
+        classPrototype[LISTENBUS_ARRAY_KEY] = listenBusItems;
+    };
+}
+/**
+ * @NgEventBus
+ *
+ * Annotate event bus class
+ */
+export function NgEventBus(serviceConstructor) {
+    serviceConstructor.prototype[IS_EVENT_BUS] = true;
+}
+function addBusListenersToComponent(classConstructor) {
+    var overridedConstructor = classConstructor;
+    var listenBusItems = classConstructor.prototype[LISTENBUS_ARRAY_KEY] || [];
+    overridedConstructor = DecoratorUtils.overrideConstructor(classConstructor, function () {
+        var _this = this;
+        var _args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            _args[_i] = arguments[_i];
+        }
+        console.debug('___________________________');
+        console.debug('Add bus listeners of component', classConstructor.name);
+        console.debug('___________________________');
+        var sprangEventBus = $injector.get(eventBusInjectName);
+        var listenBusManager = sprangEventBus.getEventBusListenerManager();
+        listenBusItems.forEach(function (listenBusItem) {
+            var events = listenBusItem.getEvents();
+            listenBusManager.addEventListener(events, function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                _this[listenBusItem.propertyName].apply(_this, args);
+            });
+            var original$onDestroy = _this['$onDestroy'];
+            _this['$onDestroy'] = function () {
+                original$onDestroy.apply(_this);
+                listenBusManager.unsubscribeAll();
+            };
+        });
+    });
+    return overridedConstructor;
+}
 function autowireService(classConstructor) {
     var overridedConstructor = classConstructor;
     var autowiringArray = classConstructor.prototype[AUTOWIRING_ARRAY_KEY];
@@ -267,7 +341,7 @@ function autowireService(classConstructor) {
                     injectionName = injection.dependency;
                 }
                 else {
-                    injectionName = injection.dependency().__nms_getInjectableName();
+                    injectionName = injection.dependency().__sprang_getInjectableName();
                 }
                 console.debug(injection.propertyName + ' <- ' + injectionName);
                 _this[injection.propertyName] = $injector.get(injectionName);
@@ -296,7 +370,7 @@ function autowireComponent(classConstructor) {
                 injectionName = injection.dependency;
             }
             else {
-                injectionName = injection.dependency().__nms_getInjectableName();
+                injectionName = injection.dependency().__sprang_getInjectableName();
             }
             console.debug(injection.propertyName + ' <- ' + injectionName);
             _this[injection.propertyName] = $injector.get(injectionName);
@@ -318,7 +392,7 @@ function autowireController(classConstructor, name) {
     var autowiringArray = classConstructor.prototype[AUTOWIRING_ARRAY_KEY] || [];
     // Ask Angular to inject $element and $scope into component constructor
     overridedConstructor.$inject = ['$scope'];
-    overridedConstructor.__nms_getInjectableName = function () {
+    overridedConstructor.__sprang_getInjectableName = function () {
         return name;
     };
     overridedConstructor = DecoratorUtils.overrideConstructor(classConstructor, function () {
@@ -336,7 +410,7 @@ function autowireController(classConstructor, name) {
                 injectionName = injection.dependency;
             }
             else {
-                injectionName = injection.dependency().__nms_getInjectableName();
+                injectionName = injection.dependency().__sprang_getInjectableName();
             }
             console.debug(injection.propertyName + ' <- ' + injectionName);
             _this[injection.propertyName] = $injector.get(injectionName);
@@ -362,7 +436,7 @@ function addUniqInjectableNameToConstructor(classConstructor) {
     var targetName = classConstructor.name ? classConstructor.name : 'serviceX';
     var uniqName = _injectables.has(targetName) ? buildUniqName(targetName) : targetName;
     classConstructor[INJECTION_NAME_KEY] = uniqName;
-    classConstructor.__nms_getInjectableName = function () {
+    classConstructor.__sprang_getInjectableName = function () {
         return uniqName;
     };
     _injectables.add(uniqName);

@@ -1,7 +1,10 @@
-import { uniqueId, merge, isFunction, isArray, isString } from 'lodash';
-import { addEvent, resolveEvents, buildEventSelector, EventEmitter } from './output-event';
-import parseSelector from './parse-selector';
-import { Autobind, DecoratorUtils } from './../decorators/decorators';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var lodash_1 = require("lodash");
+var output_event_1 = require("./output-event");
+exports.EventEmitter = output_event_1.EventEmitter;
+var parse_selector_1 = require("./parse-selector");
+var decorators_1 = require("./decorators/decorators");
 var BINDINGS_KEY = '__sprang_bindingsKey';
 var REQUIRES_KEY = '__sprang_requiresKey';
 var INJECTION_NAME_KEY = '__sprang_injectName';
@@ -18,16 +21,17 @@ var $injector;
 var _injectables = new Set();
 var eventBusInjectName;
 // Set main angular module to use for registration
-export function setModule(mod) {
+function setModule(mod) {
     angularModule = mod;
     for (var _i = 0, registrationQueue_1 = registrationQueue; _i < registrationQueue_1.length; _i++) {
         var registrationItem = registrationQueue_1[_i];
         register(registrationItem);
     }
     registrationQueue = [];
-    resolveEvents();
+    output_event_1.resolveEvents();
 }
-export function getInjectableName(target) {
+exports.setModule = setModule;
+function getInjectableName(target) {
     try {
         return target.__sprang_getInjectableName();
     }
@@ -35,6 +39,7 @@ export function getInjectableName(target) {
         throw ('Fail to get injectableName');
     }
 }
+exports.getInjectableName = getInjectableName;
 function register(registrationItem) {
     if (!angularModule) {
         console.debug('Delayed angular registering [' + registrationItem.type + '] : ' + registrationItem.name);
@@ -46,14 +51,13 @@ function register(registrationItem) {
     }
 }
 function buildUniqName(name) {
-    return uniqueId(name + '_');
+    return lodash_1.uniqueId(name + '_');
 }
-export { EventEmitter };
 /**
  * @Component(options:ComponentOptions)
  */
-export function Component(options) {
-    var selector = parseSelector(options.selector);
+function Component(options) {
+    var selector = parse_selector_1.default(options.selector);
     var decoratorFactory;
     switch (selector.type) {
         case 'E':
@@ -87,7 +91,7 @@ export function Component(options) {
                 overridedConstructor = addBusListenersToComponent(overridedConstructor);
                 var registrationItem = {
                     registerFunc: function (mod) {
-                        var definition = merge(options, {
+                        var definition = lodash_1.merge(options, {
                             restrict: 'A',
                             controller: overridedConstructor,
                             controllerAs: 'ctrl',
@@ -99,7 +103,7 @@ export function Component(options) {
                         if (overridedConstructor.prototype[REQUIRES_KEY]) {
                             definition.require = overridedConstructor.prototype[REQUIRES_KEY];
                         }
-                        var directiveFactory = (isFunction(definition) || isArray(definition)
+                        var directiveFactory = (lodash_1.isFunction(definition) || lodash_1.isArray(definition)
                             ? definition
                             : function () { return definition; });
                         mod.directive(selector.name, directiveFactory);
@@ -113,32 +117,35 @@ export function Component(options) {
     }
     return decoratorFactory;
 }
+exports.Component = Component;
 /**
  * @Input(publicName?: string)
  */
-export function Input(publicName) {
+function Input(publicName) {
     return function (classPrototype, propertyName) {
         var inputObject = classPrototype[BINDINGS_KEY] || {};
         inputObject[propertyName] = '<' + (publicName || '');
         classPrototype[BINDINGS_KEY] = inputObject;
     };
 }
+exports.Input = Input;
 /**
  * @Output(publicName?: string)
  */
-export function Output(publicName) {
+function Output(publicName) {
     return function (classPrototype, propertyName) {
         var name = publicName || propertyName;
-        addEvent(name);
+        output_event_1.addEvent(name);
         var outputObject = classPrototype[REQUIRES_KEY] || {};
-        outputObject['_' + propertyName] = '?' + buildEventSelector(name);
+        outputObject['_' + propertyName] = '?' + output_event_1.buildEventSelector(name);
         classPrototype[REQUIRES_KEY] = outputObject;
     };
 }
+exports.Output = Output;
 /**
  * @Filter(name:string)
  */
-export function Filter(name) {
+function Filter(name) {
     return function decoratorFactory(classConstructor) {
         var autowiredConstructor = autowireService(classConstructor);
         var registrationItem = {
@@ -155,10 +162,11 @@ export function Filter(name) {
         register(registrationItem);
     };
 }
+exports.Filter = Filter;
 /**
  * @Service()
  */
-export function Service() {
+function Service() {
     return function decoratorFactory(serviceConstructor) {
         var uniqName = addUniqInjectableNameToConstructor(serviceConstructor);
         if (serviceConstructor.prototype[IS_EVENT_BUS]) {
@@ -173,14 +181,15 @@ export function Service() {
         };
         // Auto bind all methods of a service , this is not memory consuming
         // as services are singleton
-        Autobind(serviceConstructor);
+        decorators_1.Autobind(serviceConstructor);
         register(registrationItem);
     };
 }
+exports.Service = Service;
 /**
  * @Controller(name:string)
  */
-export function Controller(name) {
+function Controller(name) {
     return function decoratorFactory(classConstructor) {
         var injectableName = name ? name : '';
         if (!name) {
@@ -203,38 +212,42 @@ export function Controller(name) {
         register(registrationItem);
     };
 }
+exports.Controller = Controller;
 /**
  * @BindString(publicName?: string)
  */
-export function BindString(publicName) {
+function BindString(publicName) {
     return function (classPrototype, propertyName) {
         var bindStringObject = classPrototype[BINDINGS_KEY] || {};
         bindStringObject[propertyName] = '@' + (publicName || '');
         classPrototype[BINDINGS_KEY] = bindStringObject;
     };
 }
+exports.BindString = BindString;
 /**
  * @Require(publicName?: string)
  */
-export function Require(ctrlName) {
+function Require(ctrlName) {
     return function (classPrototype, propertyName) {
         var requireObject = classPrototype[REQUIRES_KEY] || {};
         requireObject[propertyName] = ctrlName;
         classPrototype[REQUIRES_KEY] = requireObject;
     };
 }
+exports.Require = Require;
 /**
  * @Snabb component
  */
-export function SnabbComponent() {
+function SnabbComponent() {
     return function (classConstructor) {
         return autowireService(classConstructor);
     };
 }
+exports.SnabbComponent = SnabbComponent;
 /**
  * @Autowired(dep)
  */
-export function Autowired(dependency) {
+function Autowired(dependency) {
     // Instance property : target === the prototype of the class
     // Static property : target === class constructor
     return function decoratorFactory(classPrototype, decoratedPropertyName) {
@@ -250,29 +263,33 @@ export function Autowired(dependency) {
         classPrototype[AUTOWIRING_ARRAY_KEY] = injectArray;
     };
 }
+exports.Autowired = Autowired;
 /**
  * @NgScope
  */
-export function NgScope(classPrototype, decoratedPropertyName) {
+function NgScope(classPrototype, decoratedPropertyName) {
     classPrototype[COMPONENT_SCOPE] = decoratedPropertyName;
 }
+exports.NgScope = NgScope;
 /**
  * @NgElement
  */
-export function NgElement(classPrototype, decoratedPropertyName) {
+function NgElement(classPrototype, decoratedPropertyName) {
     classPrototype[COMPONENT_ELEMENT] = decoratedPropertyName;
 }
+exports.NgElement = NgElement;
 /**
  * @NgAttrs
  */
-export function NgAttrs(classPrototype, decoratedPropertyName) {
+function NgAttrs(classPrototype, decoratedPropertyName) {
     classPrototype[COMPONENT_ATTRS] = decoratedPropertyName;
 }
+exports.NgAttrs = NgAttrs;
 /**
  * @ListenBus(()=>Event or Event[])
  *
  */
-export function ListenBus(getEvents) {
+function ListenBus(getEvents) {
     return function (classPrototype, decoratedPropertyName) {
         var listenBusItems;
         listenBusItems = classPrototype[LISTENBUS_ARRAY_KEY];
@@ -286,18 +303,20 @@ export function ListenBus(getEvents) {
         classPrototype[LISTENBUS_ARRAY_KEY] = listenBusItems;
     };
 }
+exports.ListenBus = ListenBus;
 /**
  * @NgEventBus
  *
  * Annotate event bus class
  */
-export function NgEventBus(serviceConstructor) {
+function NgEventBus(serviceConstructor) {
     serviceConstructor.prototype[IS_EVENT_BUS] = true;
 }
+exports.NgEventBus = NgEventBus;
 function addBusListenersToComponent(classConstructor) {
     var overridedConstructor = classConstructor;
     var listenBusItems = classConstructor.prototype[LISTENBUS_ARRAY_KEY] || [];
-    overridedConstructor = DecoratorUtils.overrideConstructor(classConstructor, function () {
+    overridedConstructor = decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
         var _this = this;
         var _args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -330,14 +349,14 @@ function autowireService(classConstructor) {
     var overridedConstructor = classConstructor;
     var autowiringArray = classConstructor.prototype[AUTOWIRING_ARRAY_KEY];
     if (autowiringArray) {
-        overridedConstructor = DecoratorUtils.overrideConstructor(classConstructor, function () {
+        overridedConstructor = decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
             var _this = this;
             console.debug('___________________________');
             console.debug('Autowiring of service', classConstructor.name);
             console.debug('___________________________');
             autowiringArray.forEach(function (injection) {
                 var injectionName;
-                if (isString(injection.dependency)) {
+                if (lodash_1.isString(injection.dependency)) {
                     injectionName = injection.dependency;
                 }
                 else {
@@ -355,7 +374,7 @@ function autowireComponent(classConstructor) {
     var autowiringArray = classConstructor.prototype[AUTOWIRING_ARRAY_KEY] || [];
     // Ask Angular to inject $element and $scope into component constructor
     overridedConstructor.$inject = ['$element', '$scope', '$attrs'];
-    overridedConstructor = DecoratorUtils.overrideConstructor(classConstructor, function () {
+    overridedConstructor = decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
         var _this = this;
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -366,7 +385,7 @@ function autowireComponent(classConstructor) {
         console.debug('___________________________');
         autowiringArray.forEach(function (injection) {
             var injectionName;
-            if (isString(injection.dependency)) {
+            if (lodash_1.isString(injection.dependency)) {
                 injectionName = injection.dependency;
             }
             else {
@@ -395,7 +414,7 @@ function autowireController(classConstructor, name) {
     overridedConstructor.__sprang_getInjectableName = function () {
         return name;
     };
-    overridedConstructor = DecoratorUtils.overrideConstructor(classConstructor, function () {
+    overridedConstructor = decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
         var _this = this;
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -406,7 +425,7 @@ function autowireController(classConstructor, name) {
         console.debug('___________________________');
         autowiringArray.forEach(function (injection) {
             var injectionName;
-            if (isString(injection.dependency)) {
+            if (lodash_1.isString(injection.dependency)) {
                 injectionName = injection.dependency;
             }
             else {
@@ -427,10 +446,11 @@ function autowireController(classConstructor, name) {
     });
     return overridedConstructor;
 }
-export function startAutowiring(injector) {
+function startAutowiring(injector) {
     console.debug('Autowiring ready');
     $injector = injector;
 }
+exports.startAutowiring = startAutowiring;
 function addUniqInjectableNameToConstructor(classConstructor) {
     // IE11 doesn't provide classConstructor.name
     var targetName = classConstructor.name ? classConstructor.name : 'serviceX';
@@ -442,4 +462,4 @@ function addUniqInjectableNameToConstructor(classConstructor) {
     _injectables.add(uniqName);
     return uniqName;
 }
-//# sourceMappingURL=sprang-angular-decorators.js.map
+//# sourceMappingURL=angular-decorators.js.map

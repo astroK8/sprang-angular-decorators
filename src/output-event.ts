@@ -1,4 +1,4 @@
-import { Component, NgElement, NgScope, Autowired, NgAttrs } from './sprang-angular-decorators';
+import { Component, NgElement, NgScope, Autowired, NgAttrs } from './angular-decorators';
 
 let events = new Set([
   'click',

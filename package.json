@@ -2,9 +2,9 @@
   "name": "sprang-angular-decorators",
   "version": "1.0.1",
   "description": "Spring like decorators for angular 1",
-  "main": "build/sprang-angular-decorators.js",
-  "module": "es/sprang-angular-decorators.js",
-  "typings": "build/sprang-angular-decorators.d.ts",
+  "main": "build/angular-decorators.js",
+  "module": "es/angular-decorators.js",
+  "typings": "build/angular-decorators.d.ts",
   "dependencies": {
     "lodash": "^4.17.11",
     "es6-shim": "^0.35.4"

@@ -1,7 +1,7 @@
 import { uniqueId, merge, isFunction, isArray, isString } from 'lodash';
 import { addEvent, resolveEvents, buildEventSelector, EventEmitter } from './output-event';
 import parseSelector from './parse-selector';
-import { Autobind, DecoratorUtils } from './../decorators/decorators';
+import { Autobind, DecoratorUtils } from './decorators/decorators';
 import { EventBusListenerManagerProvider } from './EventBusListenerManagerProvider';
 
 const BINDINGS_KEY: string = '__sprang_bindingsKey';

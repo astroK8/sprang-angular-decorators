@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var sprang_angular_decorators_1 = require("./sprang-angular-decorators");
+var angular_decorators_1 = require("./angular-decorators");
 var events = new Set([
     'click',
     'dblclick',
@@ -80,19 +80,19 @@ function resolveEvents() {
                 });
             };
             __decorate([
-                sprang_angular_decorators_1.NgElement
+                angular_decorators_1.NgElement
             ], EventHandler.prototype, "$element", void 0);
             __decorate([
-                sprang_angular_decorators_1.NgScope
+                angular_decorators_1.NgScope
             ], EventHandler.prototype, "$scope", void 0);
             __decorate([
-                sprang_angular_decorators_1.NgAttrs
+                angular_decorators_1.NgAttrs
             ], EventHandler.prototype, "$attrs", void 0);
             __decorate([
-                sprang_angular_decorators_1.Autowired('$parse')
+                angular_decorators_1.Autowired('$parse')
             ], EventHandler.prototype, "$parse", void 0);
             EventHandler = __decorate([
-                sprang_angular_decorators_1.Component({
+                angular_decorators_1.Component({
                     selector: '[' + selector + ']'
                 })
             ], EventHandler);
