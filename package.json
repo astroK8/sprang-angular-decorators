@@ -25,9 +25,10 @@
     "compile-es": "tsc --outDir es --module es6 --moduleResolution node",
     "compile-commonjs": "tsc --outDir ./build",
     "prepublishOnly": "npm run compile",
-    "release-major": "xyz --repo git@github.com:astroK8/sprang-angular-decorators.git --increment major",
-    "release-minor": "xyz --repo git@github.com:astroK8/sprang-angular-decorators.git --increment minor",
-    "release-patch": "xyz --repo git@github.com:astroK8/sprang-angular-decorators.git --increment patch"
+    "release-major": "release-it major",
+    "release-minor": "release-it minor",
+    "release-patch": "release-it",
+    "release-test": "release-it --dry-run"
   },
   "repository": {
     "type": "git",
