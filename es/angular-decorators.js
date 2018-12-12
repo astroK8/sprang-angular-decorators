@@ -1,7 +1,7 @@
 import { uniqueId, merge, isFunction, isArray, isString } from 'lodash';
 import { addEvent, resolveEvents, buildEventSelector, EventEmitter } from './output-event';
 import parseSelector from './parse-selector';
-import { Autobind, DecoratorUtils } from './decorators/decorators';
+import { Autobind, DecoratorUtils } from 'sprang-decorators';
 var BINDINGS_KEY = '__sprang_bindingsKey';
 var REQUIRES_KEY = '__sprang_requiresKey';
 var INJECTION_NAME_KEY = '__sprang_injectName';

@@ -4,7 +4,7 @@ var lodash_1 = require("lodash");
 var output_event_1 = require("./output-event");
 exports.EventEmitter = output_event_1.EventEmitter;
 var parse_selector_1 = require("./parse-selector");
-var decorators_1 = require("./decorators/decorators");
+var sprang_decorators_1 = require("sprang-decorators");
 var BINDINGS_KEY = '__sprang_bindingsKey';
 var REQUIRES_KEY = '__sprang_requiresKey';
 var INJECTION_NAME_KEY = '__sprang_injectName';
@@ -181,7 +181,7 @@ function Service() {
         };
         // Auto bind all methods of a service , this is not memory consuming
         // as services are singleton
-        decorators_1.Autobind(serviceConstructor);
+        sprang_decorators_1.Autobind(serviceConstructor);
         register(registrationItem);
     };
 }
@@ -316,7 +316,7 @@ exports.NgEventBus = NgEventBus;
 function addBusListenersToComponent(classConstructor) {
     var overridedConstructor = classConstructor;
     var listenBusItems = classConstructor.prototype[LISTENBUS_ARRAY_KEY] || [];
-    overridedConstructor = decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
+    overridedConstructor = sprang_decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
         var _this = this;
         var _args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -349,7 +349,7 @@ function autowireService(classConstructor) {
     var overridedConstructor = classConstructor;
     var autowiringArray = classConstructor.prototype[AUTOWIRING_ARRAY_KEY];
     if (autowiringArray) {
-        overridedConstructor = decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
+        overridedConstructor = sprang_decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
             var _this = this;
             console.debug('___________________________');
             console.debug('Autowiring of service', classConstructor.name);
@@ -374,7 +374,7 @@ function autowireComponent(classConstructor) {
     var autowiringArray = classConstructor.prototype[AUTOWIRING_ARRAY_KEY] || [];
     // Ask Angular to inject $element and $scope into component constructor
     overridedConstructor.$inject = ['$element', '$scope', '$attrs'];
-    overridedConstructor = decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
+    overridedConstructor = sprang_decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
         var _this = this;
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -414,7 +414,7 @@ function autowireController(classConstructor, name) {
     overridedConstructor.__sprang_getInjectableName = function () {
         return name;
     };
-    overridedConstructor = decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
+    overridedConstructor = sprang_decorators_1.DecoratorUtils.overrideConstructor(classConstructor, function () {
         var _this = this;
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
