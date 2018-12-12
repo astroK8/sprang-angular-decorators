@@ -12,10 +12,11 @@
     "sprang-decorators": "^1.0.0"
   },
   "devDependencies": {
-    "typescript": "^3.1.6",
-    "@types/lodash": "^4.14.118",
     "@types/angular": "^1.6.51",
-    "@types/es6-shim": "^0.31.39"
+    "@types/es6-shim": "^0.31.39",
+    "@types/lodash": "^4.14.118",
+    "typescript": "^3.1.6",
+    "xyz": "^3.0.0"
   },
   "scripts": {
     "pretest": "npm run compile",
