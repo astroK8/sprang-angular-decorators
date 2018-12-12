@@ -15,6 +15,7 @@
     "@types/angular": "^1.6.51",
     "@types/es6-shim": "^0.31.39",
     "@types/lodash": "^4.14.118",
+    "release-it": "^8.4.2",
     "typescript": "^3.1.6",
     "xyz": "^3.0.0"
   },
