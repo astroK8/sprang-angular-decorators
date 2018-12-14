@@ -3,11 +3,15 @@ sprang-angular-decorators
 
 Angular decorators for angular 1 inspired by [ng-forward](https://github.com/ngUpgraders/ng-forward) and java/spring annotations
 
-## Bootstrap
+## Bootstrap angular application
 
 ```typescript
+import 'angular';
+import 'angular-animate';
+import 'angular-messages';
 import { setModule, startAutowiring } from 'sprang-angular-decorators';
 
+// Native angular modules dependencies
 let dependencies = [
     'ngMessages',
     'ngAnimate'
@@ -22,9 +26,18 @@ setModule(angular.module('App', dependencies)
 angular.bootstrap(document.documentElement, ['App'], { strictDi: true });
 ```
 
+## @Service
+
+Registers an angular service. 
+
+```typescript
+@Service()  
+export class MyService {}
+```
+
 ## @Autowired
 
-Auto injection of services
+Auto injection of services (autowiring done on properties)
 
 ```typescript
 import { MyService } from './../myService';
@@ -43,17 +56,7 @@ export class X {
 
 Notes:  
   - Angular native services are injected via there name as a string
-  - Custom angular services (decorated with @Service) are injected via a function returning corresponding class
-
-
-## @Service
-
-Registers an angular service
-
-```typescript
-@Service()  
-export class MyService {}
-```
+  - Caution : Custom angular services (class decorated with @Service) shall be passed to annotation via a function returning corresponding class (()=>MyService).
 
 
 ## @Component
@@ -88,7 +91,7 @@ class MyComponent implements ng.ComponentLifeCycle {
     }
 }
 ```
-***Warning !!! $ctrl shall be used in templates => {{$ctrl.x}}*** 
+***Warning !!! $ctrl shall syntax shall be used in templates => {{$ctrl.x}}*** 
 
 ## @Controller
 
@@ -115,7 +118,7 @@ export class MyComponentOnly {
 
 ## @NgAttrs
 
-Auto injects component attributes (Input or BindString shall be prefered)
+Auto injects component attributes (note: @Input or @BindString shall be prefered)
 
 ```typescript
 @Controller()  
@@ -239,30 +242,28 @@ class X {
 }
 ```
 
-## @SnabbComponent
 
-```typescript
-@SnabbComponent
-export class SComponentName extends SnabbdomComponent<Props> {
-    constructor() {
-        super();
-    }
 
-    protected view() {
-        ...
-    }
-    ...
-}
-```
+**Following documentation is in progress...**
+
+|
+
+|
+
+V
 
 ## @NgEventBus
 
-Annotate class that implements event bus
+Annotate class that implements EventBusListenerManagerProvider<U,V> interface
 
 ```typescript
 @NgEventBus
 export class MyBus {
-    ...
+ 
+    getEventBusListenerManager():EventBusListenerManager<U,V> {
+        ...
+    }
+
 }
 ```
 
@@ -282,5 +283,19 @@ export class MyComponent {
 myMethod will be called each time MyEvent is fired by class annotated with @NgEventBus.
 ListenBus decorator will automatically unregister bus listener when component is destroyed.
 
+## @SnabbComponent
 
+```typescript
+@SnabbComponent
+export class SComponentName extends SnabbdomComponent<Props> {
+    constructor() {
+        super();
+    }
+
+    protected view() {
+        ...
+    }
+    ...
+}
+```
 
